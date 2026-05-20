@@ -7,28 +7,6 @@
 #define MAX_COL 31 // 널문자 포함
 #define MAX_UNDO 5
 
-void display_help(){
-    printf("=======================================\n");
-    printf("S O K O B A N H E L P\n");
-    printf("=======================================\n");
-    printf("왼쪽     h (left)\n");
-    printf("아래     j (down)\n");
-    printf("위       k (up)\n");
-    printf("오른쪽   l (right)\n\n");
-    printf("u (undo)\n");
-    printf("a (again)\n");
-    printf("n (new)\n");
-    printf("r (record)\n");
-    printf("e (record end)\n");
-    printf("p (play recorded game)\n");
-    printf("x (exit)\n");
-    printf("s (save)\n");
-    printf("f (file load)\n");
-    printf("d (display help)\n");
-    printf("t (top)\n");
-    printf("enter (redraw map)\n\n");
-    printf("=======================================\n");
-}
 void copy_map(char dest[MAX_ROW][MAX_COL], char src[MAX_ROW][MAX_COL])
 {
     int i;
@@ -87,34 +65,41 @@ int get_height(char state[MAX_ROW][MAX_COL])
 }
 
 int is_cleared(char state[MAX_ROW][MAX_COL],
-                char origin[MAX_ROW][MAX_COL]){
+               char origin[MAX_ROW][MAX_COL])
+{
     int i, j;
 
-    for (i = 0; i < MAX_ROW; i++){
-        for (j = 0; j < MAX_COL; j++){
-            if (origin[i][j] == 'O'){
+    for (i = 0; i < MAX_ROW; i++)
+    {
+        for (j = 0; j < MAX_COL; j++)
+        {
+            if (origin[i][j] == 'O')
+            {
                 if (state[i][j] != '$')
                 {
-                    //printf("Not cleared\n");
                     return 0;
                 }
             }
         }
     }
-    //printf("Cleared\n");
+
     return 1;
 }
 
 int move_player(char state[MAX_ROW][MAX_COL],
                 char origin[MAX_ROW][MAX_COL],
-                char cmd){
+                char cmd)
+{
     int y, x;
     int py = -1, px = -1;
     int dy = 0, dx = 0;
 
-    for (y = 0; y < MAX_ROW; y++){ //플레이어 위치 찾기
-        for (x = 0; x < MAX_COL; x++){
-            if (state[y][x] == '@'){
+    for (y = 0; y < MAX_ROW; y++)
+    {
+        for (x = 0; x < MAX_COL; x++)
+        {
+            if (state[y][x] == '@')
+            {
                 py = y;
                 px = x;
                 break;
@@ -124,7 +109,7 @@ int move_player(char state[MAX_ROW][MAX_COL],
                 break;
         }
 
-        if (py != -1) //
+        if (py != -1)
             break;
 
         if (state[y][0] == '\0')
@@ -152,8 +137,9 @@ int move_player(char state[MAX_ROW][MAX_COL],
     if (state[y][x] == '#') //다음 위치가 벽의 위치일 경우
         return 0;
 
-    if (state[y][x] == '$'){ //다음 위치가 박스의 위치일 경우
-        int by = y + dy, bx = x + dx; ; //박스가 이동할 위치
+    if (state[y][x] == '$') //다음 위치가 박스의 위치일 경우
+    {
+        int by = y + dy, bx = x + dx; //박스가 이동할 위치
 
         if (by < 0 || by >= MAX_ROW || bx < 0 || bx >= MAX_COL) //박스가 이동할 위치가 맵을 넘어갔을 경우
             return 0;
@@ -161,7 +147,8 @@ int move_player(char state[MAX_ROW][MAX_COL],
         if (state[by][bx] == '\0')
             return 0;
 
-        if (state[by][bx] == '.' || state[by][bx] == 'O'){ //박스가 이동할 위치가 빈 공간이나 목표 지점일 경우
+        if (state[by][bx] == '.' || state[by][bx] == 'O') //박스가 이동할 위치가 빈 공간이나 목표 지점일 경우
+        {
             state[by][bx] = '$'; //박스 이동
             state[y][x] = '@'; //플레이어 이동
             state[py][px] = origin[py][px]; //플레이어가 있던 위치를 . 으로 변경
@@ -172,7 +159,8 @@ int move_player(char state[MAX_ROW][MAX_COL],
         return 0; //박스가 이동할 위치가 벽이나 다른 박스일 경우
     }
 
-    if (state[y][x] == '.' || state[y][x] == 'O'){ //다음 위치가 빈 공간이나 목표 지점일 경우
+    if (state[y][x] == '.' || state[y][x] == 'O') //다음 위치가 빈 공간이나 목표 지점일 경우
+    {
         state[y][x] = '@';
         state[py][px] = origin[py][px]; //현재 위치를 . 혹은 O으로 변경
 
@@ -212,25 +200,16 @@ void save_game(char name[4],
     fclose(fp);
     printf("Saved\n");
 }
-void save_ranking(char name[4], int level, int moves)
-{
-    FILE* fp = fopen("ranking", "a");
-
-    if (fp == NULL)
-    {
-        printf("ranking 파일을 저장할 수 없습니다.\n");
-        return;
-    }
-
-    fprintf(fp, "%s %d %04d\n", name, level, moves);
-
-    fclose(fp);
-}
 
 void rank(void)
 {
     FILE* fp = fopen("ranking", "r");
-    char line[100];
+    int level;
+    char name[10];
+    char move[10];
+
+    int current_level = 0;
+    int printed = 0;
 
     if (fp == NULL)
     {
@@ -238,18 +217,143 @@ void rank(void)
         return;
     }
 
-    printf("===============\n");
-    printf(" R A N K I N G\n");
-    printf("===============\n");
+    printf("================\n\n");
+    printf(" R A N K I N G\n\n");
+    printf("================\n\n");
 
-    while (fgets(line, sizeof(line), fp) != NULL)
+    while (fscanf(fp, "%d %9s %9s", &level, name, move) == 3)
     {
-        printf("%s", line);
+        if (level != current_level)
+        {
+            if (current_level != 0 && printed == 0)
+            {
+                printf("NONE\n\n");
+            }
+
+            current_level = level;
+            printed = 0;
+
+            printf("*** LEVEL %d ***\n\n", current_level);
+        }
+
+        if (strcmp(name, "NONE") != 0 && strcmp(move, "NONE") != 0)
+        {
+            printf("%s %s\n", name, move);
+            printed = 1;
+        }
+    }
+
+    if (current_level != 0 && printed == 0)
+    {
+        printf("NONE\n");
     }
 
     fclose(fp);
 }
 
+void update_ranking(char name[4], int level, int moves)
+{
+    FILE* fp;
+    int r_level[25];
+    char r_name[25][10];
+    int r_move[25];
+    char move_text[25][10];
+
+    int i;
+    int start;
+    int insert_pos = -1;
+    int old_pos = -1;
+
+    fp = fopen("ranking", "r");
+
+    if (fp == NULL)
+    {
+        printf("ranking 파일이 없습니다.\n");
+        return;
+    }
+
+    for (i = 0; i < 25; i++)
+    {
+        if (fscanf(fp, "%d %9s %9s", &r_level[i], r_name[i], move_text[i]) != 3)
+        {
+            fclose(fp);
+            printf("ranking 파일 형식이 잘못되었습니다.\n");
+            return;
+        }
+
+        if (strcmp(move_text[i], "NONE") == 0)
+            r_move[i] = -1;
+        else
+            sscanf(move_text[i], "%d", &r_move[i]);
+    }
+
+    fclose(fp);
+
+    start = level * 5;
+
+    for (i = start; i < start + 5; i++)
+    {
+        if (strcmp(r_name[i], name) == 0)
+        {
+            old_pos = i;
+            break;
+        }
+    }
+
+    if (old_pos != -1)
+    {
+        if (r_move[old_pos] <= moves)
+            return;
+
+        for (i = old_pos; i < start + 4; i++)
+        {
+            strcpy(r_name[i], r_name[i + 1]);
+            r_move[i] = r_move[i + 1];
+        }
+
+        strcpy(r_name[start + 4], "NONE");
+        r_move[start + 4] = -1;
+    }
+
+    for (i = start; i < start + 5; i++)
+    {
+        if (r_move[i] == -1 || moves < r_move[i])
+        {
+            insert_pos = i;
+            break;
+        }
+    }
+
+    if (insert_pos == -1)
+        return;
+
+    for (i = start + 4; i > insert_pos; i--)
+    {
+        strcpy(r_name[i], r_name[i - 1]);
+        r_move[i] = r_move[i - 1];
+    }
+
+    strcpy(r_name[insert_pos], name);
+    r_move[insert_pos] = moves;
+
+    fp = fopen("ranking", "w");
+
+    if (fp == NULL)
+    {
+        printf("ranking 파일을 저장할 수 없습니다.\n");
+        return;
+    }
+
+    for (i = 0; i < 25; i++)
+    {
+        if (r_move[i] == -1)
+            fprintf(fp, "%d NONE NONE\n", r_level[i]);
+        else
+            fprintf(fp, "%d %s %d\n", r_level[i], r_name[i], r_move[i]);
+    }
+
+    fclose(fp);
+}
 
 void play_game(char name[4],
                int level,
@@ -297,10 +401,6 @@ void play_game(char name[4],
         {
             rank();
         }
-        else if (cmd == 'd' || cmd == 'D')
-        {
-            display_help();
-        }
         else if (cmd == 'u' || cmd == 'U')
         {
             if (undoTop >= 0)
@@ -316,10 +416,6 @@ void play_game(char name[4],
                 moves++;
                 strcpy(action, "Undid");
             }
-        }
-        else if (cmd == 'a' || cmd == 'A'){
-            strcpy(action, "Again");
-            play_game(name, level, 0, map, map[level], map[level], action);     
         }
         else if (cmd == 'h' || cmd == 'H' ||
                  cmd == 'j' || cmd == 'J' ||
@@ -349,11 +445,12 @@ void play_game(char name[4],
             }
 
             if (move_player(state, origin, cmd))
-            {   
+            {
                 if (cmd == 'h' || cmd == 'H') strcpy(action, "Left");
                 else if (cmd == 'j' || cmd == 'J') strcpy(action, "Down");
                 else if (cmd == 'k' || cmd == 'K') strcpy(action, "Up");
                 else if (cmd == 'l' || cmd == 'L') strcpy(action, "Right");
+
                 moves++;
             }
             else
@@ -362,8 +459,10 @@ void play_game(char name[4],
             }
         }
 
-        if (is_cleared(state, origin)){
-            
+        if (is_cleared(state, origin))
+        {
+            update_ranking(name, level, moves);
+
             printf("================\n");
             printf("%s in Level %d\n", name, level + 1);
             printf("================\n");
@@ -371,24 +470,26 @@ void play_game(char name[4],
             print_map(state);
             printf("\n%s\n", action);
             printf("(Moves) %04d\n", moves);
-            save_ranking(name, level + 1, moves);
+
             break;
         }
     }
-    if (level + 1 >= MAX_LEVEL)
-    {
-        printf("Congratulations!!\n");
-        return;
-    }
+
     printf("Good job! Continue (N/Y) ");
     scanf(" %c", &cmd);
 
     if (cmd == 'y' || cmd == 'Y')
-    { 
+    {
+        if (level + 1 >= MAX_LEVEL || map[level + 1][0][0] == '\0')
+        {
+            printf("Congratulations!!\n");
+            return;
+        }
+
         strcpy(action, "");
         play_game(name, level + 1, 0, map, map[level + 1], map[level + 1], action);
         return;
-    } 
+    }
     else if (cmd == 'n' || cmd == 'N')
     {
         printf("Good bye!!\n");
@@ -455,13 +556,15 @@ void file_load(char map[MAX_LEVEL][MAX_ROW][MAX_COL])
 void start_new_game(int level,
                     char name[4],
                     char map[MAX_LEVEL][MAX_ROW][MAX_COL])
-{   
+{
     char action[100] = {'\0'};
+
     if (level == 0)
     {
         strcpy(action, "Welcome ");
         strcat(action, name);
     }
+
     play_game(name, level, 0, map, map[level], map[level], action);
 }
 
@@ -700,10 +803,15 @@ int load_map(char map[MAX_LEVEL][MAX_ROW][MAX_COL])
 int main(void)
 {
     char map[MAX_LEVEL][MAX_ROW][MAX_COL] = {'\0'};
-    
-    if (load_map(map))
+
+    if (!load_map(map))
     {
-        init(map);
+        return 0;
     }
+
+    init(map);
+
+    printf("Thank you for playing!!\n");
+
     return 0;
 }
