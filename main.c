@@ -7,6 +7,29 @@
 #define MAX_COL 31 // 널문자 포함
 #define MAX_UNDO 5
 
+void display_help(){
+    printf("=======================================\n");
+    printf("S O K O B A N H E L P\n");
+    printf("=======================================\n");
+    printf("왼쪽     h (left)\n");
+    printf("아래     j (down)\n");
+    printf("위       k (up)\n");
+    printf("오른쪽   l (right)\n\n");
+    printf("u (undo)\n");
+    printf("a (again)\n");
+    printf("n (new)\n");
+    printf("r (record)\n");
+    printf("e (record end)\n");
+    printf("p (play recorded game)\n");
+    printf("x (exit)\n");
+    printf("s (save)\n");
+    printf("f (file load)\n");
+    printf("d (display help)\n");
+    printf("t (top)\n");
+    printf("enter (redraw map)\n\n");
+    printf("=======================================\n");
+}
+
 void copy_map(char dest[MAX_ROW][MAX_COL], char src[MAX_ROW][MAX_COL])
 {
     int i;
@@ -401,6 +424,10 @@ void play_game(char name[4],
         {
             rank();
         }
+        else if (cmd == 'd' || cmd == 'D')
+        {
+            display_help();
+        }
         else if (cmd == 'u' || cmd == 'U')
         {
             if (undoTop >= 0)
@@ -458,7 +485,17 @@ void play_game(char name[4],
                 undoTop--;
             }
         }
+        else if(cmd == 'n' || cmd == 'N'){
+            strcpy(action, "Replay from level 1");
+            play_game(name, 1, 0, map, map[0], map[0], action);
+        }
 
+        else if (cmd == 'a' || cmd == 'A'){
+            strcpy(action, "Again");
+            play_game(name, level, 0, map, map[level], map[level], action);
+        }
+
+        
         if (is_cleared(state, origin))
         {
             update_ranking(name, level, moves);
